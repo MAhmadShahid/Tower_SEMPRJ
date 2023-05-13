@@ -9,6 +9,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameInput _gameInput;
 
     [Header("Player")]
+    [Space]
+    [Header("Walking")]
     [Tooltip("Hieght of the player model")]
     [SerializeField] private float _playerHeight = 1.0f;
     [Tooltip("The speed with which the player walks")]
@@ -22,6 +24,9 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody _rigidbody;
     private float _currentWalkingPenalty = 1.0f;
+
+    [Header("Jumping")]
+    [SerializeField] private float _jumpForce = 10.0f;
 
     // Start is called before the first frame update
     void Start()
