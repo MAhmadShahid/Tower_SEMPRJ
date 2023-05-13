@@ -14,7 +14,6 @@ namespace Arena
         {
             _playerInputActions = new PlayerInputActions();
             _playerInputActions.Player.Enable();
-
         }
 
 
