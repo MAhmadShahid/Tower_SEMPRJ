@@ -1,6 +1,7 @@
 using Arena;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -11,6 +12,9 @@ public class PlayerController : MonoBehaviour
 
     [Header("Player")]
     [Space]
+
+    // Input Section
+    private Vector3 _inputVector3D;
 
     // Walking Section
 
@@ -47,13 +51,18 @@ public class PlayerController : MonoBehaviour
     private bool _hasJumped;
     private bool _hasDoubleJumped;
     private float _lastTimeJumped;
-    private float _timeLeftGrounded = -10.0f;
+    private float _timeLeftGrounded = -10.0f; // arbitrary value
 
     // Grounding Section
 
     [SerializeField] private Transform _playerBase;
     [SerializeField] private LayerMask _floorMask;
     private bool _isGrounded;
+
+    // Dashing Section
+    [Header("Dashing")]
+    [Tooltip("The impulse force added to the player controller in the direction of input")]
+    [SerializeField] private float _dashingForce = 2.0f;
 
     // Testing && Debugging Variables
     private float _maxJumpHeightReached = 0.0f;
@@ -73,11 +82,13 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        HandleInput();
         HandleGrounding();
         HandleWalking();
         HandleJumping();
+        HandleDashing();
 
-        Debug.Log($"Velocity: {_rigidbody.velocity}");
+        //Debug.Log($"Velocity: {_rigidbody.velocity}");
 
         /*Code to check the maximum hieght reached by the player*/
         //var currentJumpHeight = transform.position.y;
@@ -85,13 +96,21 @@ public class PlayerController : MonoBehaviour
         //Debug.Log($"Max hieght: {_maxJumpHeightReached}");
     }
 
-    private void HandleWalking()
+    private void HandleInput()
     {
         // our move input will control movment along the x-z plane
         Vector2 inputVector = _gameInput.GetMovementVectorNormalized();
         // projecting the 2D vector onto the 3D plane
-        // and setting its magnitude to the walk speed
-        Vector3 directionVector = new Vector3(inputVector.x, 0, inputVector.y) * _walkSpeed;
+        _inputVector3D = new Vector3(inputVector.x, 0.0f, inputVector.y);
+    }
+
+    private void HandleWalking()
+    {
+        
+        Vector2 inputVector = _gameInput.GetMovementVectorNormalized();
+
+        // taking the input vector direction and setting its magnitude to the walk speed
+        Vector3 directionVector = _inputVector3D * _walkSpeed;
 
         // calculate the current walking penalty
         // i.e. what is the max speed our character is able to reach this frame because of the penalty
@@ -187,5 +206,15 @@ public class PlayerController : MonoBehaviour
         //}
         //else 
         //    Debug.Log($"Grounded = false, hasJumped = {_hasJumped}, hasDoubleJumped = {_hasDoubleJumped}");
+    }
+
+    private void HandleDashing()
+    {
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            Debug.Log("'E' Pressed ! Dashing .....");
+            Vector3 directionVector = _inputVector3D;
+            _rigidbody.AddForce(directionVector * _dashingForce, ForceMode.Impulse);
+        }
     }
 }
