@@ -41,10 +41,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _fallMultiplier = 2.5f;
     [Tooltip("At which point of its ascend will the player experience extra gravity to fall down quickly")]
     [SerializeField] private float _fallOffVelocity = 6.0f;
+    [Tooltip("The time range during which, after leaving the ground, the player will be able to jump")]
+    [SerializeField] private float _coyoteTime = 0.2f;
 
     private bool _hasJumped;
     private bool _hasDoubleJumped;
     private float _lastTimeJumped;
+    private float _timeLeftGrounded = -10.0f;
 
     // Grounding Section
 
@@ -118,7 +121,7 @@ public class PlayerController : MonoBehaviour
         {
             Debug.Log("Pressed Space: Jump!");
 
-            if (_isGrounded && !_hasJumped)
+            if ((_isGrounded || Time.time < _timeLeftGrounded + _coyoteTime) && !_hasJumped)
             {
                 // add an impulse force for the jump
                 _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
@@ -163,8 +166,21 @@ public class PlayerController : MonoBehaviour
 
     private void HandleGrounding()
     {
-        _isGrounded = Physics.CheckSphere(_playerBase.transform.position, 0.30f, _floorMask);
+        bool nowGrounded = Physics.CheckSphere(_playerBase.transform.position, 0.30f, _floorMask);
         
+        // if in this frame it starts being grounded
+        if(!_isGrounded && nowGrounded)
+        {
+            
+        }
+        // if in this frame it starts being not grounded
+        else if(_isGrounded && !nowGrounded) 
+        {
+            _timeLeftGrounded = Time.time;
+        }
+
+        _isGrounded = nowGrounded;
+
         //if (_isGrounded) 
         //{ 
         //    Debug.Log($"Grounded = true, hasJumped = {_hasJumped}, hasDoubleJumped = {_hasDoubleJumped}"); 
