@@ -80,6 +80,11 @@ namespace Arena
         void Start()
         {
             _rigidbody = GetComponent<Rigidbody>();
+
+            // locking away the cursor
+            Cursor.lockState= CursorLockMode.Locked;
+            Cursor.visible = false;
+
             //_playerBase = transform.Find("Base");
 
             //if(_playerBase == null)
