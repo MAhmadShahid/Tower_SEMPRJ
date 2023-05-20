@@ -12,10 +12,13 @@ namespace Tower
         [Header("Input")]
         [SerializeField] private GameInput _gameInput;
 
-        [Header("Animator")]
+        [Header("Animation & Effects")]
         [SerializeField] private Animator _playerAnimator;
+        [SerializeField] private GameObject _playerTrail;
         private const string IS_WALKING = "isWalking";
-        private const string JUMP = "Jump";
+        private const string JUMP = "jump";
+        private const string LANDING = "isGoingToLand";
+        private const string LANDED = "isLanded";
 
         [Header("Player")]
         [Space]
@@ -62,9 +65,11 @@ namespace Tower
         [Tooltip("The time range during which, after leaving the ground, the player will be able to jump")]
         [SerializeField] private float _coyoteTime = 0.2f;
 
+        private bool _inCoyoteZone;
         private bool _hasJumped;
         private bool _hasDoubleJumped;
         private float _lastTimeJumped;
+        private float jumpTimerStart;
         private float _timeLeftGrounded = -10.0f; // arbitrary value
 
         // Grounding Section
@@ -77,6 +82,7 @@ namespace Tower
         [Header("Dashing")]
         [Tooltip("The impulse force added to the player controller in the direction of input")]
         [SerializeField] private float _dashingForce = 2.0f;
+        private bool _inDashState;
 
         // Testing && Debugging Variables
         private float _maxJumpHeightReached = 0.0f;
@@ -108,7 +114,8 @@ namespace Tower
             HandleWalking();
             HandleJumping();
             HandleDashing();
-
+            HandleAnimations();
+            HandlePlayerTrail();
             //Debug.Log($"Velocity: {_rigidbody.velocity}");
 
             /*Code to check the maximum hieght reached by the player*/
@@ -148,7 +155,7 @@ namespace Tower
 
             // calculate the current walking penalty
             // i.e. what is the max speed our character is able to reach this frame because of the penalty
-            if (directionVector != Vector3.zero)
+            if (directionVector != Vector3.zero && _isGrounded)
                 _currentWalkingPenalty += _acceleration * Time.deltaTime;
             else
                 _currentWalkingPenalty -= _acceleration * Time.deltaTime;
@@ -173,16 +180,17 @@ namespace Tower
 
         private void HandleJumping()
         {
+            
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 Debug.Log("Pressed Space: Jump!");
 
+                _inCoyoteZone = Time.time < _timeLeftGrounded + _coyoteTime;
                 // perform single jump
-                if ((_isGrounded || Time.time < _timeLeftGrounded + _coyoteTime) && !_hasJumped)
+                if ((_isGrounded || _inCoyoteZone) && !_hasJumped)
                 {
-                    _playerAnimator.SetBool(JUMP, true);
+                    _playerAnimator.SetTrigger(JUMP);
                     _playerAnimator.SetBool("isLanded", false);
-                    _playerAnimator.SetBool("isDashing", false);
                     // add an impulse force for the jump
                     _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
                     _hasJumped = true;
@@ -200,14 +208,13 @@ namespace Tower
                     _hasDoubleJumped = true;
 
                     _playerAnimator.SetTrigger("DoubleJump");
-                    _playerAnimator.SetBool("isDashing", false);
                 }
 
             }
-            else
-            {
-                _playerAnimator.SetBool(JUMP, false);
-            }
+            //else
+            //{
+            //    _playerAnimator.SetBool(JUMP, false);
+            //}
 
             // Revert the jump states if the player has landed on the ground
             // if the object is grounded after jumping once or twice
@@ -227,11 +234,72 @@ namespace Tower
             }
 
 
-            if ((_rigidbody.velocity.y < _fallOffVelocity) && !_isGrounded)//(_hasJumped || _hasDoubleJumped))
+            if ((_rigidbody.velocity.y < _fallOffVelocity) && !_isGrounded) //(_hasJumped || _hasDoubleJumped))
             {
                 _rigidbody.velocity += Vector3.up * Physics.gravity.y * _fallMultiplier * Time.deltaTime;
             }
         }
+
+        //private void HandleJumpingAfterDelay()
+        //{
+        //    if (Input.GetKeyDown(KeyCode.Space))
+        //    {
+        //        jumpTimerStart = Time.time;
+        //        Debug.Log("Pressed Space: Jump!");
+
+        //        // perform single jump
+        //        if ((_isGrounded || Time.time < _timeLeftGrounded + _coyoteTime) && !_hasJumped)
+        //        {
+        //            _playerAnimator.SetBool(JUMP, true);
+        //            // add an impulse force for the jump
+        //            _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
+        //            _hasJumped = true;
+        //            _lastTimeJumped = Time.time;
+        //            Debug.Log("First Jump");
+
+        //        }
+        //        // perform double jump
+        //        else if (!_isGrounded && _hasJumped && !_hasDoubleJumped && _enableDoubleJump)
+        //        {
+        //            // reset the y velocity of the object before doing the second jump
+        //            // it will nullify the momentum of the first jump
+        //            _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z);
+        //            _rigidbody.AddForce(Vector3.up * _secondJumpForce, ForceMode.Impulse);
+        //            _hasDoubleJumped = true;
+
+        //            _playerAnimator.SetTrigger("DoubleJump");
+        //            //_playerAnimator.SetBool(LANDED, _rigidbody.velocity.y > -10);
+        //        }
+
+        //    }
+        //    else
+        //    {
+        //        _playerAnimator.SetBool(JUMP, false);
+        //    }
+
+        //    // Revert the jump states if the player has landed on the ground
+        //    // if the object is grounded after jumping once or twice
+        //    if (_isGrounded && _hasJumped)
+        //    {
+        //        // This will start checking after some time n after jumping
+        //        // this helps to prevent reverting the state for a breif moment where the check sphere is still in contact with the ground after jumping
+        //        float deltaTimeCheck = 0.25f;
+        //        var elapsedTimeAfterJumping = Time.time - _lastTimeJumped;
+        //        if (elapsedTimeAfterJumping > deltaTimeCheck)
+        //        {
+        //            _hasJumped = false;
+        //            _hasDoubleJumped = false;
+        //            _playerAnimator.SetBool("isLanded", true);
+        //        }
+
+        //    }
+
+
+        //    if ((_rigidbody.velocity.y < _fallOffVelocity) && !_isGrounded) //(_hasJumped || _hasDoubleJumped))
+        //    {
+        //        _rigidbody.velocity += Vector3.up * Physics.gravity.y * _fallMultiplier * Time.deltaTime;
+        //    }
+        //}
 
         private void HandleGrounding()
         {
@@ -270,14 +338,33 @@ namespace Tower
             }
         }
 
-        private void PlayAnimations()
+        private void onPlayerFalling()
         {
+            _playerAnimator.SetBool(LANDING, !_isGrounded && _rigidbody.velocity.y <= -10);
+        }
 
+        private void HandleAnimations()
+        {
+            _playerAnimator.SetBool(LANDED, _isGrounded);
+            onPlayerFalling();
         }
 
         private void PlayDashAnimation()
         {
             
+        }
+
+        private void HandlePlayerTrail()
+        {
+            TrailRenderer trailRenderer = _playerTrail.GetComponent<TrailRenderer>();
+            float trailTime = 0.0f;
+
+            if (_rigidbody.velocity.magnitude > 11)
+                trailTime = 0.25f;
+            else
+                trailTime = 0.0f;
+
+            trailRenderer.time = Mathf.Lerp(trailRenderer.time, trailTime, 0.05f);
         }
     }
 

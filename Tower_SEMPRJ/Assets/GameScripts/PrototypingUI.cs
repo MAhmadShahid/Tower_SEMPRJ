@@ -8,6 +8,7 @@ public class PrototypingUI : MonoBehaviour
 {
 
     public Rigidbody _playerRigidBody;
+    public TextMeshProUGUI _velocity;
     public TextMeshProUGUI x, y, z;
     public TextMeshProUGUI cx, cy, cz;
 
@@ -15,6 +16,7 @@ public class PrototypingUI : MonoBehaviour
     void Update()
     {
         Vector3 velocity = _playerRigidBody.velocity;
+        _velocity.text = "Velocity: " + Mathf.Round(velocity.magnitude).ToString();
         x.text = "X: " + Mathf.Round(velocity.x).ToString();
         y.text = "Y: " + Mathf.Round(velocity.y).ToString();
         z.text = "Z: " + Mathf.Round(velocity.z).ToString();
