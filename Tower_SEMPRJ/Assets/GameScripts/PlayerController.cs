@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using UnityEngine;
+using Unity.VisualScripting;
 
 namespace Tower
 {
@@ -10,6 +11,11 @@ namespace Tower
     {
         [Header("Input")]
         [SerializeField] private GameInput _gameInput;
+
+        [Header("Animator")]
+        [SerializeField] private Animator _playerAnimator;
+        private const string IS_WALKING = "isWalking";
+        private const string JUMP = "Jump";
 
         [Header("Player")]
         [Space]
@@ -84,6 +90,8 @@ namespace Tower
             Cursor.lockState= CursorLockMode.Locked;
             Cursor.visible = false;
 
+            _playerAnimator.SetBool(IS_WALKING, false);
+
             //_playerBase = transform.Find("Base");
 
             //if(_playerBase == null)
@@ -144,6 +152,7 @@ namespace Tower
                 _currentWalkingPenalty += _acceleration * Time.deltaTime;
             else
                 _currentWalkingPenalty -= _acceleration * Time.deltaTime;
+                
 
             // keep the penalty between the range of 0.5 and 1.
             _currentWalkingPenalty = Mathf.Clamp(_currentWalkingPenalty, _maxWalkingPenalty, 1);
@@ -158,6 +167,8 @@ namespace Tower
             // smoothly transition between current velocity and the target velocity with steps equal to the walkLerpSpeed * Time.deltaTime
             _rigidbody.velocity = Vector3.MoveTowards(_rigidbody.velocity, targetVelocity, _walkLerpSpeed * Time.deltaTime);
 
+            _playerAnimator.SetBool(IS_WALKING, directionVector != Vector3.zero && _isGrounded); 
+
         }
 
         private void HandleJumping()
@@ -166,14 +177,20 @@ namespace Tower
             {
                 Debug.Log("Pressed Space: Jump!");
 
+                // perform single jump
                 if ((_isGrounded || Time.time < _timeLeftGrounded + _coyoteTime) && !_hasJumped)
                 {
+                    _playerAnimator.SetBool(JUMP, true);
+                    _playerAnimator.SetBool("isLanded", false);
+                    _playerAnimator.SetBool("isDashing", false);
                     // add an impulse force for the jump
                     _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
                     _hasJumped = true;
                     _lastTimeJumped = Time.time;
                     Debug.Log("First Jump");
+                    
                 }
+                // perform double jump
                 else if (!_isGrounded && _hasJumped && !_hasDoubleJumped && _enableDoubleJump)
                 {
                     // reset the y velocity of the object before doing the second jump
@@ -181,8 +198,15 @@ namespace Tower
                     _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z);
                     _rigidbody.AddForce(Vector3.up * _secondJumpForce, ForceMode.Impulse);
                     _hasDoubleJumped = true;
+
+                    _playerAnimator.SetTrigger("DoubleJump");
+                    _playerAnimator.SetBool("isDashing", false);
                 }
 
+            }
+            else
+            {
+                _playerAnimator.SetBool(JUMP, false);
             }
 
             // Revert the jump states if the player has landed on the ground
@@ -197,7 +221,9 @@ namespace Tower
                 {
                     _hasJumped = false;
                     _hasDoubleJumped = false;
+                    _playerAnimator.SetBool("isLanded", true);
                 }
+
             }
 
 
@@ -205,8 +231,6 @@ namespace Tower
             {
                 _rigidbody.velocity += Vector3.up * Physics.gravity.y * _fallMultiplier * Time.deltaTime;
             }
-
-
         }
 
         private void HandleGrounding()
@@ -241,7 +265,19 @@ namespace Tower
                 Debug.Log("'E' Pressed ! Dashing .....");
                 Vector3 directionVector = _moveDirection;
                 _rigidbody.AddForce(directionVector * _dashingForce, ForceMode.Impulse);
+
+                _playerAnimator.SetBool("isDashing", true);
             }
+        }
+
+        private void PlayAnimations()
+        {
+
+        }
+
+        private void PlayDashAnimation()
+        {
+            
         }
     }
 
