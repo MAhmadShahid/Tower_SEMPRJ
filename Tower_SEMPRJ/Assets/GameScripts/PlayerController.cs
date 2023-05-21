@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using UnityEngine;
 using Unity.VisualScripting;
+using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 namespace Tower
 {
@@ -15,6 +16,9 @@ namespace Tower
         [Header("Animation & Effects")]
         [SerializeField] private Animator _playerAnimator;
         [SerializeField] private GameObject _playerTrail;
+        [SerializeField] private ParticleSystem[] _dashParticles;
+        [SerializeField] private ParticleSystem _jumpParticles;
+        [SerializeField] private ParticleSystem _dustParticles;
         private const string IS_WALKING = "isWalking";
         private const string JUMP = "jump";
         private const string LANDING = "isGoingToLand";
@@ -116,6 +120,7 @@ namespace Tower
             HandleDashing();
             HandleAnimations();
             HandlePlayerTrail();
+            HandleParticles();
             //Debug.Log($"Velocity: {_rigidbody.velocity}");
 
             /*Code to check the maximum hieght reached by the player*/
@@ -360,11 +365,44 @@ namespace Tower
             float trailTime = 0.0f;
 
             if (_rigidbody.velocity.magnitude > 11)
+            {
                 trailTime = 0.25f;
+            }
             else
                 trailTime = 0.0f;
 
             trailRenderer.time = Mathf.Lerp(trailRenderer.time, trailTime, 0.05f);
+        }
+
+        private void HandleParticles()
+        {
+            if (Input.GetKeyDown(KeyCode.Mouse0) && _rigidbody.velocity != Vector3.zero)
+            {
+                for(int counter = 0; counter < _dashParticles.Length; counter++)
+                {
+                    _dashParticles[counter].transform.forward = -_moveDirection.normalized;
+                    _dashParticles[counter].transform.position = transform.position + _moveDirection.normalized * 1.5f;
+                    _dashParticles[counter].Play();
+                }
+                //_playerDashLine.transform.forward = - _moveDirection.normalized;
+                //_playerDashLine.transform.position = transform.position + _moveDirection.normalized * 1.5f;
+                //_playerDashLine.Play();
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+                _jumpParticles.Play();
+
+
+
+            //if (_rigidbody.velocity.x + _rigidbody.velocity.x != 0 && _isGrounded)
+            //{
+            //    _dustParticles.transform.forward = -_moveDirection.normalized;
+            //    _dustParticles.transform.position = transform.position;
+            //    _dustParticles.Play();
+            //}
+                
+
+
         }
     }
 
