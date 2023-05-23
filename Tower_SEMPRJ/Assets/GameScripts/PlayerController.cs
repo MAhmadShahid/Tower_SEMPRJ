@@ -308,7 +308,7 @@ namespace Tower
 
         private void HandleGrounding()
         {
-            bool nowGrounded = Physics.CheckSphere(_playerBase.transform.position, 0.30f, _floorMask);
+            bool nowGrounded = Physics.CheckSphere(_playerBase.transform.position, 0.5f, _floorMask);
 
             // if in this frame it starts being grounded
             if (!_isGrounded && nowGrounded)
