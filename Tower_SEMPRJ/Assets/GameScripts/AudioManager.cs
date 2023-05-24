@@ -11,7 +11,7 @@ public class AudioManager : MonoBehaviour
     public static AudioManager instance;
     void Awake()
     {
-        //to prevent Multiple instances of Audio Manager. Detail Below
+        // to prevent Multiple instances of Audio Manager. Detail Below
         if (instance == null)
         {
             instance = this;

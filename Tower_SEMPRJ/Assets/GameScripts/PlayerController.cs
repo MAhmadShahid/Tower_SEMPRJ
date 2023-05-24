@@ -10,6 +10,12 @@ namespace Tower
 {
     public class PlayerController : MonoBehaviour
     {
+
+        //[Header("TestingVariables")]
+        //public GameObject _inputDirectionArrow;
+        //public GameObject _orientationDirectionArrow;
+        //public GameObject _resultantDirectionArrow;
+
         [Header("Input")]
         [SerializeField] private GameInput _gameInput;
 
@@ -34,8 +40,10 @@ namespace Tower
         [SerializeField] private Transform _orientation;
         [SerializeField] private float _rotationSpeed = 2.0f;
 
+
         private Vector3 _inputVector3D;
         private Vector3 _moveDirection;
+        
 
         // Walking Section
 
@@ -86,7 +94,14 @@ namespace Tower
         [Header("Dashing")]
         [Tooltip("The impulse force added to the player controller in the direction of input")]
         [SerializeField] private float _dashingForce = 2.0f;
+        [SerializeField] private int _consecutiveAllowedDashes;
+        [SerializeField] private Cooldown _dashCoolDown;
+        [SerializeField] private Cooldown _resetDashCoolDown;
+
         private bool _inDashState;
+        private int _currentDashIndex;
+        
+
 
         // Testing && Debugging Variables
         private float _maxJumpHeightReached = 0.0f;
@@ -135,13 +150,28 @@ namespace Tower
             Vector2 inputVector = _gameInput.GetMovementVectorNormalized();
             // projecting the 2D vector onto the 3D plane
             _inputVector3D = new Vector3(inputVector.x, 0.0f, inputVector.y);
+            //_inputDirectionArrow.transform.forward = _inputVector3D.normalized;
 
 
             // for look direction extracted from the camera
             Vector3 cameraViewDirection = transform.position - new Vector3(_cameraTransform.position.x, transform.position.y, _cameraTransform.position.z);
             _orientation.forward = cameraViewDirection.normalized;
+            //_orientationDirectionArrow.transform.forward = _orientation.forward;
 
+            // Raycast downward to get the terrain normal at the player's position
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, Vector3.down, out hit))
+            {
+                if (hit.collider.CompareTag("Terrain"))
+                {
+                    Vector3 terrainNormal = hit.normal;
+                    cameraViewDirection = Vector3.ProjectOnPlane(cameraViewDirection, terrainNormal).normalized;
+                }
+            }
+
+            // scale the orientation unit vector to the input vector
             _moveDirection = _inputVector3D.z * _orientation.forward + _inputVector3D.x * _orientation.right;
+            //_resultantDirectionArrow.transform.forward = _moveDirection;
 
             if(_moveDirection != Vector3.zero)
                 _playerVisualObject.forward = Vector3.Slerp(_playerVisualObject.forward, _moveDirection, Time.deltaTime * _rotationSpeed);
@@ -333,14 +363,39 @@ namespace Tower
 
         private void HandleDashing()
         {
-            if (Input.GetKeyDown(KeyCode.Mouse0))
+            if (!_resetDashCoolDown.IsCoolingDown())
             {
+                // reset the dash index
+                _currentDashIndex = 0;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Mouse0) && !_dashCoolDown.IsCoolingDown())
+            {
+                
+                // this if-else is to implement consecutive dashes and the cooldown once all dashes are utilized
+                if (_currentDashIndex < _consecutiveAllowedDashes - 1)
+                {
+                    _currentDashIndex++;
+                    // this is to reset the cooldown if the player only uses one dash, rather than consecutive dash
+                    // start this cooldown for every dash other than the final dash
+                    _resetDashCoolDown.InitiateCooldown();
+                }
+                else
+                {
+                    _dashCoolDown.InitiateCooldown();
+                    _currentDashIndex = (_currentDashIndex + 1) % (_consecutiveAllowedDashes);
+                }
+
                 Debug.Log("'E' Pressed ! Dashing .....");
                 Vector3 directionVector = _moveDirection;
                 _rigidbody.AddForce(directionVector * _dashingForce, ForceMode.Impulse);
 
                 _playerAnimator.SetBool("isDashing", true);
+                _inDashState = true;
+
             }
+            else
+                _inDashState = false;
         }
 
         private void onPlayerFalling()
@@ -376,7 +431,7 @@ namespace Tower
 
         private void HandleParticles()
         {
-            if (Input.GetKeyDown(KeyCode.Mouse0) && _rigidbody.velocity != Vector3.zero)
+            if (Input.GetKeyDown(KeyCode.Mouse0) && _rigidbody.velocity != Vector3.zero && _inDashState)
             {
                 for(int counter = 0; counter < _dashParticles.Length; counter++)
                 {
