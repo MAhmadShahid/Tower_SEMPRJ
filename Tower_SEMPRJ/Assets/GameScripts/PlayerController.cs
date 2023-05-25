@@ -177,7 +177,7 @@ namespace Tower
                 _playerVisualObject.forward = Vector3.Slerp(_playerVisualObject.forward, _moveDirection, Time.deltaTime * _rotationSpeed);
 
 
-            Debug.Log($"Camera Forward: {_cameraTransform.forward}\nPlayer Forward: {_playerVisualObject.transform.forward}");
+            // Debug.Log($"Camera Forward: {_cameraTransform.forward}\nPlayer Forward: {_playerVisualObject.transform.forward}");
         }
 
         private void HandleWalking()
