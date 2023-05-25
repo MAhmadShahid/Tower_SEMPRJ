@@ -65,11 +65,12 @@ namespace Tower
         // Jumping Section
 
         [Header("Jumping")]
+        public bool _canJump = true;
         [Tooltip("The impulse force with which the player jumps")]
         [SerializeField] private float _jumpForce = 10.0f;
         [SerializeField] private float _secondJumpForce = 5.0f;
         [Tooltip("Is the player allowed to double jump ?")]
-        [SerializeField] private bool _enableDoubleJump = true;
+        public bool _enableDoubleJump = true;
         [Tooltip("The factor by which the character will fall towards the ground while airborne")]
         [SerializeField] private float _fallMultiplier = 2.5f;
         [Tooltip("At which point of its ascend will the player experience extra gravity to fall down quickly")]
@@ -92,6 +93,7 @@ namespace Tower
 
         // Dashing Section
         [Header("Dashing")]
+        public bool _canDash = true;
         [Tooltip("The impulse force added to the player controller in the direction of input")]
         [SerializeField] private float _dashingForce = 2.0f;
         [SerializeField] private int _consecutiveAllowedDashes;
@@ -215,7 +217,8 @@ namespace Tower
 
         private void HandleJumping()
         {
-            
+            if(!_canJump) return;
+
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 Debug.Log("Pressed Space: Jump!");
@@ -228,6 +231,7 @@ namespace Tower
                     _playerAnimator.SetBool("isLanded", false);
                     // add an impulse force for the jump
                     _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
+                    _jumpParticles.Play();
                     _hasJumped = true;
                     _lastTimeJumped = Time.time;
                     Debug.Log("First Jump");
@@ -241,6 +245,7 @@ namespace Tower
                     _rigidbody.velocity = new Vector3(_rigidbody.velocity.x, 0, _rigidbody.velocity.z);
                     _rigidbody.AddForce(Vector3.up * _secondJumpForce, ForceMode.Impulse);
                     _hasDoubleJumped = true;
+                    _jumpParticles.Play();
 
                     _playerAnimator.SetTrigger("DoubleJump");
                 }
@@ -363,6 +368,9 @@ namespace Tower
 
         private void HandleDashing()
         {
+
+            if (!_canDash) return;
+
             if (!_resetDashCoolDown.IsCoolingDown())
             {
                 // reset the dash index
@@ -444,20 +452,13 @@ namespace Tower
                 //_playerDashLine.Play();
             }
 
-            if (Input.GetKeyDown(KeyCode.Space))
-                _jumpParticles.Play();
-
-
-
             //if (_rigidbody.velocity.x + _rigidbody.velocity.x != 0 && _isGrounded)
             //{
             //    _dustParticles.transform.forward = -_moveDirection.normalized;
             //    _dustParticles.transform.position = transform.position;
             //    _dustParticles.Play();
             //}
-                
-
-
+               
         }
     }
 
