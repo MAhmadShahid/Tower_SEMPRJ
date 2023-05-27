@@ -114,7 +114,7 @@ namespace Tower
             _rigidbody = GetComponent<Rigidbody>();
 
             // locking away the cursor
-            Cursor.lockState= CursorLockMode.Locked;
+            Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
 
             _playerAnimator.SetBool(IS_WALKING, false);
@@ -137,7 +137,6 @@ namespace Tower
             HandleDashing();
             HandleAnimations();
             HandlePlayerTrail();
-            HandleParticles();
             //Debug.Log($"Velocity: {_rigidbody.velocity}");
 
             /*Code to check the maximum hieght reached by the player*/
@@ -377,7 +376,7 @@ namespace Tower
                 _currentDashIndex = 0;
             }
 
-            if (Input.GetKeyDown(KeyCode.Mouse0) && !_dashCoolDown.IsCoolingDown())
+            if (Input.GetKeyDown(KeyCode.Mouse0) && !_dashCoolDown.IsCoolingDown() && _rigidbody.velocity.magnitude > 1)
             {
                 
                 // this if-else is to implement consecutive dashes and the cooldown once all dashes are utilized
@@ -397,6 +396,7 @@ namespace Tower
                 Debug.Log("'E' Pressed ! Dashing .....");
                 Vector3 directionVector = _moveDirection;
                 _rigidbody.AddForce(directionVector * _dashingForce, ForceMode.Impulse);
+                PlayDashParticles(); 
 
                 _playerAnimator.SetBool("isDashing", true);
                 _inDashState = true;
@@ -437,10 +437,9 @@ namespace Tower
             trailRenderer.time = Mathf.Lerp(trailRenderer.time, trailTime, 0.05f);
         }
 
-        private void HandleParticles()
+        private void PlayDashParticles()
         {
-            if (Input.GetKeyDown(KeyCode.Mouse0) && _rigidbody.velocity != Vector3.zero && _inDashState)
-            {
+
                 for(int counter = 0; counter < _dashParticles.Length; counter++)
                 {
                     _dashParticles[counter].transform.forward = -_moveDirection.normalized;
@@ -450,7 +449,7 @@ namespace Tower
                 //_playerDashLine.transform.forward = - _moveDirection.normalized;
                 //_playerDashLine.transform.position = transform.position + _moveDirection.normalized * 1.5f;
                 //_playerDashLine.Play();
-            }
+
 
             //if (_rigidbody.velocity.x + _rigidbody.velocity.x != 0 && _isGrounded)
             //{

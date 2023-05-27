@@ -52,5 +52,6 @@ public class LevelSystem
     }
 
     public int GetLevelNumber() => _currentLevel;
+    public Tuple<int, int> GetExperienceTuple() => new Tuple<int, int>(_currentExperience, _experienceToNextLevel);
     public List<string> GetAbilityList() => _abilites;
 }
