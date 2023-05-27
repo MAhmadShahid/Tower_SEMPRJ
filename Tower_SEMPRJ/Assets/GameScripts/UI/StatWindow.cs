@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -7,8 +8,8 @@ using UnityEngine.UI;
 public class StatWindow : MonoBehaviour
 {
     [SerializeField] private GameObject _statWindow;
-    [SerializeField] private TextMeshProUGUI _levelText;
-    [SerializeField] private GameObject _experiencePanel;
+    [SerializeField] private TextMeshProUGUI _levelNumber;
+    [SerializeField] private Transform _experienceBar;
 
     [SerializeField] private TextMeshProUGUI _abilityTextList;
 
@@ -20,6 +21,20 @@ public class StatWindow : MonoBehaviour
     void Start()
     {
         _levelSystem = _levelSystemManager.GetLevelSystem();
+        SetUpStatWindow();
+
+        _levelSystem.OnLevelChanged += _levelSystem_OnLevelChanged;
+        _levelSystem.OnExperienceChanged += _levelSystem_OnExperienceChanged;
+    }
+
+    private void _levelSystem_OnExperienceChanged(object sender, EventArgs e)
+    {
+        UpdateExperienceVisual();
+    }
+
+    private void _levelSystem_OnLevelChanged(object sender, EventArgs e)
+    {
+        UpdateLevelVisual();
     }
 
     // Update is called once per frame
@@ -30,8 +45,8 @@ public class StatWindow : MonoBehaviour
 
     private void SetUpStatWindow()
     {
-        _levelText.text = "Level" + _levelSystem.GetLevelNumber().ToString();
-        // setup the experience bar
+        UpdateLevelVisual();
+        UpdateExperienceVisual();
 
         foreach(string ability in _levelSystem.GetAbilityList()) 
         {
@@ -39,9 +54,19 @@ public class StatWindow : MonoBehaviour
         }
     }
 
-    private void UpdateStatWindow()
-    {
 
+    private void UpdateLevelVisual()
+    {
+        int currentLevel = _levelSystem.GetLevelNumber();
+        _levelNumber.text = currentLevel.ToString();
+    }
+
+    private void UpdateExperienceVisual()
+    {
+        Tuple<int, int> experience = _levelSystem.GetExperienceTuple();
+        float experienceNormalized = (float)experience.Item1 / experience.Item2;
+
+        _experienceBar.LeanScaleX(experienceNormalized, 0.0f);
     }
 
     private void AddAbilityToDisplayList(string p_ability)
