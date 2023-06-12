@@ -1,14 +1,11 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Level2Manager : MonoBehaviour
 {
-    public static Level2Manager Instance;
+    public static Level2Manager Instance { get; private set; }
 
-    public int collectedItemCount = 0;
-    public int targetItemCount = 3;
-
-    public GameObject doorPrefab;
-    private bool doorDropped = false;
+    public int collectedItems;
 
     private void Awake()
     {
@@ -18,27 +15,18 @@ public class Level2Manager : MonoBehaviour
             Destroy(gameObject);
     }
 
+    private void Start()
+    {
+        collectedItems = 0;
+    }
+
     public void CollectItem()
     {
-        collectedItemCount++;
-
-        if (collectedItemCount >= targetItemCount && !doorDropped)
-        {
-            DropDoor();
-            doorDropped = true;
-        }
+        collectedItems++;
     }
 
-    private void DropDoor()
+    public void RestartLevel()
     {
-        
-        Vector3 dropPosition = new Vector3(467.09f, 0f, 713.417847f);
-
-        
-        GameObject door = Instantiate(doorPrefab, dropPosition, Quaternion.identity);
-        
-
-        Debug.Log("Door dropped at position: " + dropPosition);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-
 }
