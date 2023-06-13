@@ -1,14 +1,14 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-
-public class CollectibleItems : MonoBehaviour
+using UnityEngine.SceneManagement;
+public class NextLevelCollider : MonoBehaviour
 {
-    public float timeIncrease = 10f;
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.name.StartsWith("Player"))
         {
-            Level2Manager.Instance.CollectItem();
-            Timer.Instance.IncreaseTime(timeIncrease);
+            SceneManager.LoadScene("LobbyScene");
             Destroy(gameObject);
         }
     }
