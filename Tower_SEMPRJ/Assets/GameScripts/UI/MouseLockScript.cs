@@ -7,6 +7,11 @@ public class MouseLockScript : MonoBehaviour
     private bool _isMouseLocked = false;
 
     // Start is called before the first frame update
+
+    private void Awake()
+    {
+        DontDestroyOnLoad(this);    
+    }
     void Start()
     {
         

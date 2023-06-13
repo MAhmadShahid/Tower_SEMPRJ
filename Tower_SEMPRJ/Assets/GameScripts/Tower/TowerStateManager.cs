@@ -24,6 +24,7 @@ namespace Tower
         void Start()
         {
             _currentLevel = _lobbyLevel;
+            _latestUnlockedLevel = _levelList[0];
         }
 
         // Update is called once per frame
@@ -47,7 +48,12 @@ namespace Tower
 
         public void LoadNextLevel()
         {
-            int indexOfNextLevel = _currentLevel._sceneIndex + 1;
+            int indexOfNextLevel = _currentLevel._sceneIndex + 1 - 2;
+            Debug.Log($"Index Of Next Level: {_currentLevel._sceneIndex}\n");
+
+            _currentLevel._isLevelCompleted = true;
+            _currentLevel = _levelList[indexOfNextLevel];
+            _currentLevel._locked = false;
 
             if (_levelList[indexOfNextLevel]._locked && !_currentLevel._isLevelCompleted)
             {
@@ -55,7 +61,15 @@ namespace Tower
                 return;
             }
 
-            _currentLevel = _levelList[indexOfNextLevel];
+;
+            _latestUnlockedLevel = _currentLevel;
+            Debug.Log(_currentLevel._sceneIndex);
+            _currentLevel.LoadLevel();
+        }
+
+        public void LoadTowerLevel()
+        {
+            _currentLevel = _latestUnlockedLevel;
             _currentLevel.LoadLevel();
         }
 

@@ -26,23 +26,22 @@ public class AudioManager : MonoBehaviour
         //But it will result in multiple instances of a game object AudioManager. Above if-else will prevent from this
         DontDestroyOnLoad(gameObject);
 
-        
-
-
-        foreach(Sound s in sounds)
-        {
-            s.source = gameObject.GetComponent<AudioSource>();
-            
-            s.source.clip = s.clip;
-            s.source.volume= s.volume;
-            s.source.pitch= s.pitch;
-            s.source.loop= s.loop;
-            s.source.playOnAwake = s.playOnAwake;
-        }
+       
     }
 
     private void Start()
     {
+        foreach (Sound s in sounds)
+        {
+            s.source = gameObject.AddComponent<AudioSource>();
+
+
+            s.source.clip = s.clip;
+            s.source.volume = s.volume;
+            s.source.pitch = s.pitch;
+            s.source.loop = s.loop;
+            s.source.playOnAwake = s.playOnAwake;
+        }
         Play("theme");
     }
 
